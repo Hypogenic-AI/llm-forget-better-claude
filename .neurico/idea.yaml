@@ -1,0 +1,24 @@
+idea:
+  title: LLMs won't learn properly until they forget better
+  domain: nlp
+  hypothesis: 'The primary issue limiting LLM generalization is that they memorize
+    too quickly, causing them to learn less from highly similar examples. This rapid
+    memorization makes LLMs less data efficient compared to humans, despite no fundamental
+    architectural limitations.
+
+    '
+  background:
+    description: "Hypothesis: the first-order issue that's holding back LLM generalization\
+      \ is the fact that they can memorize too fast. Because of this, they don't learn\
+      \ as much as they could from highly similar examples\u2014they factor them out\
+      \ far faster than humans do, making them less data efficient without any fundamental\
+      \ architectural issue.\n"
+  metadata:
+    author: Ari Holtzman
+    source: IdeaHub
+    source_url: https://hypogenic.ai/ideahub/idea/eOqvw2rVUkhSZKPmbyhf
+    idea_id: llms_won_t_learn_properly_unti_20260322_155406_a75124cc
+    created_at: '2026-03-22T15:54:06.767408'
+    status: submitted
+    github_repo_name: llm-forget-better-claude
+    github_repo_url: https://github.com/Hypogenic-AI/llm-forget-better-claude
