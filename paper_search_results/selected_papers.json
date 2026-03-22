@@ -1,0 +1,282 @@
+[
+  {
+    "title": "Deduplicating Training Data Mitigates Privacy Risks in Language Models",
+    "year": 2022,
+    "citations": 380,
+    "arxiv_id": "2202.06539",
+    "abstract": "Past work has shown that large language models are susceptible to privacy attacks, where adversaries generate sequences from a trained model and detect which sequences are memorized from the training ",
+    "source": "SS",
+    "relevance": 3
+  },
+  {
+    "title": "Progressive Prompts: Continual Learning for Language Models",
+    "year": 2023,
+    "citations": 211,
+    "arxiv_id": "2301.12314",
+    "abstract": "We introduce Progressive Prompts - a simple and efficient approach for continual learning in language models. Our method allows forward transfer and resists catastrophic forgetting, without relying on",
+    "source": "SS",
+    "relevance": 3
+  },
+  {
+    "title": "Generalization or Memorization: Data Contamination and Trustworthy Evaluation for Large Language Models",
+    "year": 2024,
+    "citations": 143,
+    "arxiv_id": "2402.15938",
+    "abstract": "Recent statements about the impressive capabilities of large language models (LLMs) are usually supported by evaluating on open-access benchmarks. Considering the vast size and wide-ranging sources of",
+    "source": "SS",
+    "relevance": 3
+  },
+  {
+    "title": "Generalization v.s. Memorization: Tracing Language Models' Capabilities Back to Pretraining Data",
+    "year": 2024,
+    "citations": 84,
+    "arxiv_id": "2407.14985",
+    "abstract": "The impressive capabilities of large language models (LLMs) have sparked debate over whether these models genuinely generalize to unseen tasks or predominantly rely on memorizing vast amounts of pretr",
+    "source": "SS",
+    "relevance": 3
+  },
+  {
+    "title": "Prototype-Sample Relation Distillation: Towards Replay-Free Continual Learning",
+    "year": 2023,
+    "citations": 58,
+    "arxiv_id": "2303.14771",
+    "abstract": "In Continual learning (CL) balancing effective adaptation while combating catastrophic forgetting is a central challenge. Many of the recent best-performing methods utilize various forms of prior task",
+    "source": "SS",
+    "relevance": 3
+  },
+  {
+    "title": "Can LLM Graph Reasoning Generalize beyond Pattern Memorization?",
+    "year": 2024,
+    "citations": 53,
+    "arxiv_id": "2406.15992",
+    "abstract": "Large language models (LLMs) demonstrate great potential for problems with implicit graphical structures, while recent works seek to enhance the graph reasoning capabilities of LLMs through specialize",
+    "source": "SS",
+    "relevance": 3
+  },
+  {
+    "title": "Grokking in LLM Pretraining? Monitor Memorization-to-Generalization without Test",
+    "year": 2025,
+    "citations": 4,
+    "arxiv_id": "2506.21551",
+    "abstract": "This paper presents the first study of grokking in practical LLM pretraining. Specifically, we investigate when an LLM memorizes the training data, when its generalization on downstream tasks starts t",
+    "source": "SS",
+    "relevance": 3
+  },
+  {
+    "title": "Deduplicating Training Data Makes Language Models Better",
+    "year": 2021,
+    "citations": 804,
+    "arxiv_id": "2107.06499",
+    "abstract": "We find that existing language modeling datasets contain many near-duplicate examples and long repetitive substrings.As a result, over 1% of the unprompted output of language models trained on these d",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "title": "SemDeDup: Data-efficient learning at web-scale through semantic deduplication",
+    "year": 2023,
+    "citations": 258,
+    "arxiv_id": "2303.09540",
+    "abstract": "Progress in machine learning has been driven in large part by massive increases in data. However, large web-scale datasets such as LAION are largely uncurated beyond searches for exact duplicates, pot",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "title": "Continual Learning of Large Language Models: A Comprehensive Survey",
+    "year": 2024,
+    "citations": 211,
+    "arxiv_id": "2404.16789",
+    "abstract": "The challenge of effectively and efficiently adapting statically pre-trained Large Language Models (LLMs) to ever-evolving data distributions remains predominant. When tailored for specific needs, pre",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "title": "Boosting Continual Learning of Vision-Language Models via Mixture-of-Experts Adapters",
+    "year": 2024,
+    "citations": 210,
+    "arxiv_id": "2403.11549",
+    "abstract": "Continual learning can empower vision-language models to continuously acquire new knowledge, without the need for access to the entire historical dataset. However, mitigating the performance degradati",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "title": "Continual Learning for Large Language Models: A Survey",
+    "year": 2024,
+    "citations": 168,
+    "arxiv_id": "2402.01364",
+    "abstract": "Large language models (LLMs) are not amenable to frequent re-training, due to high training costs arising from their massive scale. However, updates are necessary to endow LLMs with new skills and kee",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "title": "Preventing Zero-Shot Transfer Degradation in Continual Learning of Vision-Language Models",
+    "year": 2023,
+    "citations": 122,
+    "arxiv_id": "2303.06628",
+    "abstract": "Continual learning (CL) can help pre-trained vision-language models efficiently adapt to new or under-trained data distributions without re-training. Nevertheless, during the continual training of the",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "title": "From RAG to Memory: Non-Parametric Continual Learning for Large Language Models",
+    "year": 2025,
+    "citations": 103,
+    "arxiv_id": "2502.14802",
+    "abstract": "Our ability to continuously acquire, organize, and leverage knowledge is a key feature of human intelligence that AI systems must approximate to unlock their full potential. Given the challenges in co",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "title": "CrossQ: Batch Normalization in Deep Reinforcement Learning for Greater Sample Efficiency and Simplicity",
+    "year": 2019,
+    "citations": 99,
+    "arxiv_id": "1902.05605",
+    "abstract": "Sample efficiency is a crucial problem in deep reinforcement learning. Recent algorithms, such as REDQ and DroQ, found a way to improve the sample efficiency by increasing the update-to-data (UTD) rat",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "title": "Recent Advances of Foundation Language Models-based Continual Learning: A Survey",
+    "year": 2024,
+    "citations": 65,
+    "arxiv_id": "2405.18653",
+    "abstract": "Recently, foundation language models (LMs) have marked significant achievements in the domains of natural language processing and computer vision. Unlike traditional neural network models, foundation ",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "title": "InsCL: A Data-efficient Continual Learning Paradigm for Fine-tuning Large Language Models with Instructions",
+    "year": 2024,
+    "citations": 61,
+    "arxiv_id": "2403.11435",
+    "abstract": "Instruction tuning effectively optimizes Large Language Models (LLMs) for downstream tasks. Due to the changing environment in real-life applications, LLMs necessitate continual task-specific adaptati",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "title": "Spurious Forgetting in Continual Learning of Language Models",
+    "year": 2025,
+    "citations": 32,
+    "arxiv_id": "2501.13453",
+    "abstract": "Recent advancements in large language models (LLMs) reveal a perplexing phenomenon in continual learning: despite extensive training, models experience significant performance declines, raising questi",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "title": "Example Mining for Incremental Learning in Medical Imaging",
+    "year": 2018,
+    "citations": 16,
+    "arxiv_id": "1807.08942",
+    "abstract": "Incremental Learning is well known machine learning approach wherein the weights of the learned model are dynamically and gradually updated to generalize on new unseen data without forgetting the exis",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "title": "Continual Learning for On-Ddevice Environmental Sound Classification",
+    "year": 2022,
+    "citations": 14,
+    "arxiv_id": "2207.07429",
+    "abstract": "Continuously learning new classes without catastrophic forgetting is a challenging problem for on-device environmental sound classification given the restrictions on computation resources (e.g., model",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "title": "Boosting Sample Efficiency and Generalization in Multi-agent Reinforcement Learning via Equivariance",
+    "year": 2024,
+    "citations": 13,
+    "arxiv_id": "2410.02581",
+    "abstract": "Multi-Agent Reinforcement Learning (MARL) struggles with sample inefficiency and poor generalization [1]. These challenges are partially due to a lack of structure or inductive bias in the neural netw",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "title": "Orthogonal Low-rank Adaptation in Lie Groups for Continual Learning of Large Language Models",
+    "year": 2025,
+    "citations": 3,
+    "arxiv_id": "2509.06100",
+    "abstract": "Large language models (LLMs) suffer from catastrophic forgetting in sequential multi-task learning. Existing parameter regularization methods (e.g., O-LoRA, N-LoRA) mitigate interference via low-rank ",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "title": "A Forget-and-Grow Strategy for Deep Reinforcement Learning Scaling in Continuous Control",
+    "year": 2025,
+    "citations": 3,
+    "arxiv_id": "2507.02712",
+    "abstract": "Deep reinforcement learning for continuous control has recently achieved impressive progress. However, existing methods often suffer from primacy bias, a tendency to overfit early experiences stored i",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "title": "Memorization-Compression Cycles Improve Generalization",
+    "year": 2025,
+    "citations": 1,
+    "arxiv_id": "2505.08727",
+    "abstract": "We prove theoretically that generalization improves not only through data scaling but also by compressing internal representations. To operationalize this insight, we introduce the Information Bottlen",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "title": "Breaking Memorization Barriers in LLM Code Fine-Tuning via Information Bottleneck for Improved Generalization",
+    "year": 2025,
+    "citations": 0,
+    "arxiv_id": "2510.16022",
+    "abstract": "Adapting pretrained large language models (LLMs) to code domains via supervised fine-tuning (FT) has been commonly used for code generation. However, we identify a previously underappreciated failure ",
+    "source": "SS",
+    "relevance": 2
+  },
+  {
+    "arxiv_id": "1812.05159",
+    "title": "An Empirical Study of Example Forgetting during Deep Neural Network Learning",
+    "year": 2019
+  },
+  {
+    "arxiv_id": "2012.15816",
+    "title": "Extracting Training Data from Large Language Models",
+    "year": 2021
+  },
+  {
+    "arxiv_id": "2202.07646",
+    "title": "Quantifying Memorization Across Neural Language Models",
+    "year": 2023
+  },
+  {
+    "arxiv_id": "2008.03703",
+    "title": "Does Learning Require Memorization? A Short Tale about a Long Tail",
+    "year": 2020
+  },
+  {
+    "arxiv_id": "2305.16264",
+    "title": "Scaling Data-Constrained Language Models",
+    "year": 2023
+  },
+  {
+    "arxiv_id": "2308.12284",
+    "title": "D4: Improving LLM Pretraining via Document De-Duplication and Diversification",
+    "year": 2023
+  },
+  {
+    "arxiv_id": "2301.02679",
+    "title": "Grokking: Generalization Beyond Overfitting on Small Algorithmic Datasets",
+    "year": 2022
+  },
+  {
+    "arxiv_id": "2310.16789",
+    "title": "Counterfactual Memorization in Neural Language Models",
+    "year": 2023
+  },
+  {
+    "arxiv_id": "2205.10487",
+    "title": "Deduplicating Training Data Improves Language Model Memorization and Privacy",
+    "year": 2022
+  },
+  {
+    "arxiv_id": "2401.12309",
+    "title": "Forgetting before Learning: Utilizing Parametric Arithmetic for Knowledge Manipulation in LLMs",
+    "year": 2024
+  },
+  {
+    "arxiv_id": "2410.01524",
+    "title": "On the Similarity of Memorization and Generalization in Training LLMs",
+    "year": 2024
+  }
+]

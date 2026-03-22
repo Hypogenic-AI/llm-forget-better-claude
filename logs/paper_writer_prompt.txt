@@ -1,0 +1,885 @@
+You are an academic paper writer. Generate a complete NEURIPS style paper
+based on the experiment results provided.
+
+════════════════════════════════════════════════════════════════════════════════
+                         IMPORTANT: BEFORE YOU START
+════════════════════════════════════════════════════════════════════════════════
+
+Before writing any content, you MUST complete these steps:
+
+1. READ THE SKILL: Review the paper-writer skill at .claude/skills/paper-writer/SKILL.md
+2. READ THE STYLE GUIDE: Study templates/paper_writing/lab_style_guide.md carefully
+3. REVIEW EXAMPLES: Browse paper_examples/ for formatting and language patterns:
+   - Look at sections/1.introduction.tex for language style
+   - Look at tables/*.tex for table formatting
+   - Look at commands/*.tex for macro usage
+4. VERIFY COMMAND TEMPLATES: Command templates (math.tex, general.tex, macros.tex) are pre-copied to paper_draft/commands/
+
+CRITICAL: Reference example papers for FORMATTING and LANGUAGE STYLE only.
+Do NOT copy content, phrasing, or narrative structure from the example papers.
+The examples are in a different research domain - focus only on presentation style.
+
+════════════════════════════════════════════════════════════════════════════════
+                            EXPERIMENT REPORT
+════════════════════════════════════════════════════════════════════════════════
+
+# LLMs Won&#39;t Learn Properly Until They Forget Better
+
+## 1. Executive Summary
+
+We tested the hypothesis that rapid memorization limits neural network generalization, using modular arithmetic as a controlled testbed for the grokking phenomenon. Our key finding: **increasing &#34;forgetting pressure&#34; via weight decay accelerates generalization by 30x** (from ~17,850 steps to ~583 steps), with a strong negative correlation between forgetting pressure and time-to-generalization (Spearman rho = -0.88, p &lt; 0.00002). This provides direct evidence that models that &#34;forget&#34; faster also learn generalizable representations faster, supporting the hypothesis that rapid memorization is a primary bottleneck for data efficiency.
+
+## 2. Goal
+
+**Hypothesis**: The primary issue limiting LLM generalization is that they memorize too quickly, causing them to learn less from highly similar examples. This rapid memorization makes LLMs less data efficient compared to humans, despite no fundamental architectural limitations.
+
+**Why this matters**: If memorization speed — not architecture — is the bottleneck for generalization, then interventions that induce beneficial forgetting could dramatically reduce the data and compute needed to train effective models. This reframes the scaling debate from &#34;more data&#34; to &#34;better forgetting.&#34;
+
+**Expected impact**: Practical guidelines for training schedules, regularization strategies, and data curation that exploit the memorize-compress cycle to improve data efficiency.
+
+## 3. Data Construction
+
+### Dataset Description
+
+We use **modular addition (mod 97)**: all pairs (a, b) where a, b in {0, ..., 96}, predicting (a + b) mod 97.
+
+- **Source**: Synthetically generated (following Power et al., 2022)
+- **Total examples**: 97 x 97 = 9,409 pairs
+- **Train/test split**: 50/50 (4,704 train / 4,705 test), randomly assigned per seed
+- **Why this dataset**: Modular arithmetic is the gold standard for studying grokking. It provides:
+  - Perfect control over data distribution (no confounds)
+  - Fast iteration (minutes per run)
+  - Clear generalization criterion (exact modular arithmetic)
+  - Extensive prior work for comparison
+
+### Example Samples
+
+| Input (a, op, b, =) | Target |
+|---------------------|--------|
+| (67, +, 19) mod 97  | 86     |
+| (24, +, 52) mod 97  | 76     |
+| (67, +, 94) mod 97  | 64     |
+
+### Data Quality
+- No missing values or outliers (synthetic)
+- Uniform distribution over all (a, b) pairs
+- Deterministic labels (no noise)
+
+### Preprocessing
+- Tokens: integers 0-96 for operands, 97 for operator, 98 for equals sign
+- Input sequence: [a, op_token, b, eq_token] (length 4)
+- Output: single integer in {0, ..., 96}
+
+## 4. Experiment Description
+
+### Methodology
+
+#### High-Level Approach
+
+We conducted three experiments testing different facets of the &#34;forgetting enables generalization&#34; hypothesis:
+
+1. **Experiment 1 (Forgetting Pressure)**: Varied weight decay {0, 0.001, 0.01, 0.1, 1.0} to control forgetting pressure, measuring its effect on grokking speed and per-example forgetting events.
+2. **Experiment 2 (Duplication Effects)**: Created datasets with controlled duplication {1x, 2x, 4x, 8x} to test whether redundant examples are &#34;factored out&#34; too quickly.
+3. **Experiment 3 (Forgetting Interventions)**: Compared 7 forgetting mechanisms (baseline, dropout, noise injection, weight reset) to identify the optimal forgetting regime.
+
+#### Why This Method?
+
+Modular arithmetic + grokking provides the cleanest possible testbed for the hypothesis because:
+- Memorization and generalization are clearly separable (100% train acc long before test acc improves)
+- The &#34;true&#34; generalizable solution is known (modular arithmetic)
+- The transition from memorization to generalization can be precisely measured
+
+### Implementation Details
+
+#### Tools and Libraries
+| Library | Version |
+|---------|---------|
+| Python  | 3.12.8  |
+| PyTorch | 2.5.1+cu121 |
+| NumPy   | 2.3.0   |
+| SciPy   | 1.17.1  |
+| Matplotlib | 3.10.8 |
+
+#### Model Architecture
+- 1-layer transformer
+- d_model = 128, n_heads = 4, d_ff = 512
+- Learnable token embeddings (p+2 tokens) and positional embeddings (5 positions)
+- Prediction from last position via linear head
+
+#### Hyperparameters
+
+| Parameter | Value | Selection Method |
+|-----------|-------|------------------|
+| Learning rate | 1e-3 | Standard for grokking |
+| Optimizer | AdamW | Standard |
+| Batch size | 512 | Full-ish batch |
+| Evaluation interval | 50 steps | For tracking resolution |
+| Early stop criterion | 99% test acc | Standard grokking threshold |
+| Patience after grok | 3000 steps | Allow post-grok observation |
+
+#### Reproducibility Information
+- **Seeds**: 42, 123, 456 (3 runs per condition)
+- **Hardware**: 4x NVIDIA RTX A6000 (49 GB each)
+- **Total experiments**: 45 runs across 3 experiments
+- **Total execution time**: ~25 minutes
+
+### Experiment 1: Forgetting Pressure and Grokking
+
+**Design**: Train identical models with weight decay in {0, 0.001, 0.01, 0.1, 1.0}, tracking:
+- Steps to grokking (first step where test acc &gt;= 99%)
+- Per-example forgetting events (transitions from correct to incorrect between evaluations)
+- Training/test accuracy curves
+
+### Raw Results
+
+#### Experiment 1: Steps to Grok by Weight Decay
+
+| Weight Decay | Avg Grok Step | Std | Avg Forget Events/Example | Avg Test Acc |
+|-------------|--------------|-----|--------------------------|-------------|
+| 0.0   | 17,850 | 6,224 | 0.11 | 0.9964 |
+| 0.001 | 17,183 | 6,465 | 0.11 | 0.9970 |
+| 0.01  | 11,917 | 5,255 | 0.11 | 0.9983 |
+| 0.1   | 2,850  | 632   | 0.11 | 1.0000 |
+| 1.0   | 583    | 29    | 1.20 | 1.0000 |
+
+**Key observation**: 30x speedup from WD=0 to WD=1.0. The relationship is monotonic and dramatic.
+
+#### Experiment 2: Duplication Effects
+
+| Duplication | Avg Grok Step | Dup Example FE | Non-Dup FE | Test Acc |
+|------------|--------------|----------------|------------|----------|
+| 1x | 583 | 1.19 | 1.20 | 1.0000 |
+| 2x | 600 | 0.24 | 0.20 | 1.0000 |
+| 4x | 683 | 2.73 | 2.75 | 1.0000 |
+| 8x | 800 | 1.67 | 1.95 | 1.0000 |
+
+**Key observation**: Higher duplication slows grokking (583 → 800 steps, 37% increase). With WD=1.0, even 8x duplication still groks — but takes longer.
+
+#### Experiment 3: Forgetting Interventions
+
+| Intervention | Grok Rate | Avg Grok Step | Data Efficiency (AUC) |
+|-------------|-----------|--------------|----------------------|
+| baseline (WD=1.0) | 100% | 583 | 0.881 |
+| dropout 0.1 | 100% | 800 | 0.840 |
+| dropout 0.3 | 100% | 7,433 | 0.597 |
+| noise (small) | 100% | 583 | 0.878 |
+| noise (large) | 100% | 583 | 0.700 |
+| reset (gentle) | 100% | 550 | 0.851 |
+| reset (aggressive) | 100% | 567 | 0.788 |
+
+**Key observation**: Gentle forgetting interventions (reset_gentle, noise_small) achieve comparable or better grokking speed than baseline. Excessive forgetting (dropout 0.3) catastrophically slows learning.
+
+### Visualizations
+
+All plots are saved in `results/plots/`:
+- `summary_figure.png` — Combined 4-panel summary figure
+- `exp1_grokking_curves.png` — Test accuracy curves for each WD level
+- `exp1_grok_steps_and_forgetting.png` — Grok steps and forgetting events vs WD
+- `exp2_duplication_analysis.png` — Duplication effects on grokking and forgetting
+- `exp3_interventions_comparison.png` — Intervention comparison
+- `exp3_learning_curves.png` — Learning curves for all interventions
+
+## 5. Result Analysis
+
+### Key Findings
+
+1. **Forgetting pressure monotonically accelerates generalization**: Weight decay 0 → 1.0 reduces grokking time from ~17,850 to ~583 steps (30.6x speedup). Spearman rho = -0.88, p &lt; 0.00002. This is a massive, statistically significant effect.
+
+2. **Forgetting events increase with forgetting pressure**: At WD=1.0, examples have 1.20 mean forgetting events (vs 0.11 at WD=0), and the &#34;unforgettable&#34; fraction drops from ~90% to ~1%. This means high-WD models are continuously forgetting and relearning individual examples — each re-exposure teaches something new.
+
+3. **Data duplication slows generalization**: 8x duplication increases grokking time by 37%. Redundant examples don&#39;t help — they slightly hurt. This supports the claim that similar examples are &#34;factored out&#34; too quickly, providing diminishing returns.
+
+4. **Optimal forgetting exists**: Too little forgetting (WD=0) means the model memorizes a lookup table and never generalizes for tens of thousands of steps. Too much forgetting (dropout 0.3) means the model can&#39;t retain anything and takes 7,433 steps. The sweet spot (WD=0.1-1.0, gentle noise/reset) enables fast grokking with high data efficiency.
+
+5. **Weight decay is surprisingly effective as a forgetting mechanism**: It outperformed dropout, noise injection, and weight reset as a forgetting mechanism for generalization. This is because WD specifically penalizes the memorized solution (large, specific weights) while preserving the generalizable solution (smaller, structured weights).
+
+### Hypothesis Testing Results
+
+**H1: Higher forgetting pressure leads to faster grokking**
+- **Supported**: Spearman rho = -0.88, p = 0.000012
+- **Effect size**: Cohen&#39;s d = 3.91 (WD=0 vs WD=0.1) — extremely large
+- **Confidence**: Very high. Consistent across all 3 seeds and 5 conditions.
+
+**H2: Duplicated examples are memorized faster and contribute less to generalization**
+- **Partially supported**: Duplication increases grokking time (583 → 800 steps for 8x). However, the difference between forgetting events for duplicated vs non-duplicated examples was not consistently large. With strong WD=1.0, the model&#39;s forgetting mechanism largely compensates.
+- **Nuance**: The effect of duplication is more visible at lower WD levels (consistent with literature on deduplication benefits).
+
+**H3: Forgetting interventions improve data efficiency**
+- **Supported with caveats**: Gentle reset (550 steps) was marginally faster than baseline (583 steps). The key finding is that there&#39;s an optimal forgetting level — not that more forgetting always helps. The inverted-U relationship between forgetting and generalization is the central result.
+
+### Surprises and Insights
+
+1. **WD=0 still groks**: Even without explicit forgetting, models eventually generalize through implicit mechanisms (gradient noise from mini-batching, numerical precision limits). But it takes 30x longer.
+
+2. **WD=1.0 causes periodic catastrophic forgetting**: At high WD, models occasionally &#34;collapse&#34; (train acc drops to random), then rapidly recover and re-memorize + generalize. This oscillatory behavior is consistent with the memorization-compression cycles described by Yu (2025).
+
+3. **The unforgettable fraction is diagnostic**: At WD=0, ~90% of examples are &#34;unforgettable&#34; (learned once, never forgotten). At WD=1.0, only ~1% are unforgettable. The model that forgets more per-example learns the general rule faster. This is strong evidence that per-example forgetting is a mechanism for generalization, not a failure mode.
+
+4. **Dropout is a poor forgetting mechanism for grokking**: Despite being conceptually similar to &#34;stochastic forgetting,&#34; dropout 0.3 catastrophically delayed grokking. This suggests that not all forms of forgetting are equal — weight decay targets the right thing (memorized parameters) while dropout is too uniform.
+
+### Error Analysis
+
+Error analysis is less applicable here since the modular arithmetic task has exact solutions. However:
+- At WD=0, pre-grokking errors are systematically distributed (model has memorized training set but hasn&#39;t learned the modular structure)
+- At WD=1.0, transient errors during &#34;collapse&#34; phases affect all examples roughly equally
+- Post-grokking: zero errors in all conditions (100% test accuracy)
+
+### Limitations
+
+1. **Scale**: We studied a small transformer on a synthetic task. The hypothesis claims this applies to LLMs at scale. While the grokking phenomenon has been observed in LLM pretraining (Li et al., 2025; Yu, 2025), our controlled experiments don&#39;t directly demonstrate the effect at LLM scale.
+
+2. **Task complexity**: Modular arithmetic has a single, clean generalizable solution. Real-world language tasks have more complex, partial generalizations. The sharp memorize-then-generalize transition may be softer in practice.
+
+3. **Weight decay ≠ forgetting**: Weight decay is a regularizer that happens to induce forgetting-like behavior. It&#39;s not the only or necessarily the best way to induce beneficial forgetting. More sophisticated approaches (information bottleneck, curriculum learning) deserve study.
+
+4. **Small N**: 3 seeds per condition. While effects are large and consistent, more seeds would strengthen statistical claims.
+
+5. **Duplication experiment confounded by WD**: We ran Experiment 2 with WD=1.0 (high forgetting), which may have masked the duplication effect. Running at lower WD would likely show a larger duplication penalty.
+
+## 6. Conclusions
+
+### Summary
+
+Models that forget individual examples more readily discover generalizable solutions faster. In our experiments, increasing forgetting pressure (weight decay) from 0 to 1.0 accelerated the transition from memorization to generalization by 30x, with extremely strong statistical significance (rho = -0.88, d = 3.91). There exists an optimal level of forgetting — too little leads to prolonged memorization, too much prevents learning entirely.
+
+### Implications
+
+**Practical**: Training schedules should incorporate explicit forgetting phases or stronger regularization in early training, potentially reducing to allow fine-grained memorization later. This is consistent with warmup → cosine decay schedules and recent work on compression-aware training (Yu, 2025).
+
+**Theoretical**: The hypothesis that &#34;LLMs memorize too fast&#34; is supported at the small scale. The memorize-compress cycle (Yu, 2025) and grokking (Power et al., 2022) are different views of the same phenomenon: models must forget surface-level memorized solutions to discover deeper, generalizable structures.
+
+**For the research community**: The connection between Toneva&#39;s forgetting events, Power&#39;s grokking, and Yu&#39;s compression cycles should be formalized as a unified framework. They are all manifestations of the same underlying dynamic.
+
+### Confidence in Findings
+
+**High confidence** that forgetting pressure accelerates grokking in modular arithmetic (large effect, consistent across seeds, well-established phenomenon).
+
+**Medium confidence** that this generalizes to LLM pretraining (supported by Yu 2025, Li et al. 2025, but not directly tested here).
+
+**Lower confidence** in specific intervention recommendations (dropout vs noise vs reset) as optimal forgetting mechanisms may be task-dependent.
+
+## 7. Next Steps
+
+### Immediate Follow-ups
+
+1. **Scale up**: Reproduce Experiment 1 with Pythia models on The Pile. Track forgetting events across Pythia checkpoints and correlate with downstream benchmark performance.
+
+2. **Run Experiment 2 at lower WD**: The duplication effect is likely larger when the model has less implicit forgetting. Running at WD=0 or WD=0.01 would better isolate the data redundancy effect.
+
+3. **Curriculum learning**: Design a training schedule that alternates between &#34;memorization&#34; (low WD) and &#34;compression&#34; (high WD) phases, testing whether this outperforms constant WD.
+
+### Alternative Approaches
+
+- **Information Bottleneck regularization** (Wang et al., 2025): More principled than weight decay, directly targets information compression.
+- **Forgetting-aware data selection**: Use forgetting events to identify which training examples are most valuable (those that are forgotten most often = near the decision boundary).
+- **Selective forgetting**: Instead of global WD, apply forgetting pressure selectively to over-memorized representations.
+
+### Open Questions
+
+1. Does the 30x speedup from forgetting pressure hold at LLM scale, or does it diminish?
+2. Is there a principled way to set the optimal forgetting pressure (analogous to Chinchilla scaling laws)?
+3. Can we directly measure &#34;beneficial forgetting&#34; in a pretrained LLM&#39;s hidden representations?
+4. How does forgetting interact with data quality — is forgetting more important when data is noisy or redundant?
+
+## References
+
+### Papers Cited
+1. Toneva et al. (2019). &#34;An Empirical Study of Example Forgetting during Deep Neural Network Learning.&#34; ICLR 2019.
+2. Power et al. (2022). &#34;Grokking: Generalization Beyond Overfitting on Small Algorithmic Datasets.&#34; ICLR 2022.
+3. Carlini et al. (2023). &#34;Quantifying Memorization Across Neural Language Models.&#34; ICLR 2023.
+4. Yu (2025). &#34;Memorization-Compression Cycles Improve Generalization.&#34; NeurIPS 2025 Workshop.
+5. Li, Fan &amp; Zhou (2025). &#34;Grokking in LLM Pretraining? Monitor Memorization-to-Generalization.&#34;
+6. Wang et al. (2025). &#34;Breaking Memorization Barriers in LLM Code Fine-Tuning via Information Bottleneck.&#34;
+7. Lee et al. (2021). &#34;Deduplicating Training Data Makes Language Models Better.&#34; ACL 2022.
+8. Abbas et al. (2023). &#34;SemDeDup: Data-efficient Learning at Web-scale through Semantic Deduplication.&#34; ICLR 2024.
+9. Feldman &amp; Zhang (2020). &#34;Does Learning Require Memorization? A Short Tale about a Long Tail.&#34; STOC 2020.
+10. Muennighoff et al. (2023). &#34;Scaling Data-Constrained Language Models.&#34;
+
+### Output Files
+- `results/exp1_grokking/all_results.json` — Full Experiment 1 results
+- `results/exp2_duplication/all_results.json` — Full Experiment 2 results
+- `results/exp3_interventions/all_results.json` — Full Experiment 3 results
+- `results/plots/` — All visualizations
+- `results/combined_statistics.json` — Statistical test results
+
+
+════════════════════════════════════════════════════════════════════════════════
+                            RESEARCH PLAN
+════════════════════════════════════════════════════════════════════════════════
+
+# Research Plan: LLMs Won&#39;t Learn Properly Until They Forget Better
+
+## Motivation &amp; Novelty Assessment
+
+### Why This Research Matters
+LLMs are trained on trillions of tokens yet remain less data-efficient than humans. If the bottleneck is not architectural but behavioral — models memorize too fast, collapsing similar examples into single representations before extracting the generalizable structure — then interventions that induce &#34;beneficial forgetting&#34; could dramatically improve data efficiency. This has direct implications for training cost, model generalization, and the scaling laws that govern LLM development.
+
+### Gap in Existing Work
+The literature studies memorization (Carlini et al.), forgetting events (Toneva et al.), grokking (Power et al.), and compression cycles (Yu 2025) **separately**. No work has:
+1. Systematically varied &#34;forgetting pressure&#34; and measured its effect on data efficiency
+2. Tracked per-example forgetting events in the grokking setting to understand the memorize→forget→generalize transition
+3. Tested whether duplicated (highly similar) examples are &#34;factored out&#34; too quickly, reducing learning signal
+
+### Our Novel Contribution
+We provide the first controlled experiment linking forgetting pressure → forgetting events → data efficiency, using modular arithmetic as a clean testbed. We test three specific predictions:
+1. More forgetting pressure (weight decay) → faster grokking → better data efficiency
+2. Duplicated examples are memorized with fewer forgetting events and contribute less to generalization
+3. Forgetting interventions (dropout, noise) improve test performance per training token
+
+### Experiment Justification
+- **Experiment 1 (Grokking + Weight Decay):** Directly tests whether forgetting pressure accelerates generalization. Grokking is the cleanest natural example of the memorize-then-generalize phenomenon.
+- **Experiment 2 (Duplication and Memorization Speed):** Tests the core claim that similar examples are &#34;factored out too fast.&#34; By controlling duplication, we isolate the effect of redundancy on memorization speed and generalization.
+- **Experiment 3 (Forgetting Interventions):** Tests whether explicit forgetting mechanisms improve data efficiency, supporting the causal direction of the hypothesis.
+
+## Research Question
+Does rapid memorization limit LLM generalization, and can inducing beneficial forgetting improve data efficiency?
+
+## Hypothesis Decomposition
+- **H1:** Higher forgetting pressure (weight decay) leads to faster grokking and better generalization
+- **H2:** Duplicated examples are memorized faster (fewer forgetting events) and contribute less to generalization
+- **H3:** Forgetting interventions (dropout, noise injection, periodic perturbation) improve data efficiency (test accuracy per training step)
+
+## Proposed Methodology
+
+### Approach
+Train small transformers on modular arithmetic (addition mod 97), which is the gold-standard setting for studying grokking. This setting is:
+- Fully controlled (no confounds from data quality)
+- Fast to iterate (minutes per run)
+- Well-studied (baselines exist)
+- Directly relevant to the hypothesis (grokking = memorize then generalize)
+
+### Experimental Steps
+
+**Experiment 1: Forgetting Pressure and Grokking**
+1. Train 1-layer transformer on modular addition (mod 97)
+2. Vary weight decay: {0, 0.001, 0.01, 0.1, 1.0}
+3. Track: train acc, test acc, per-example forgetting events at each step
+4. 3 random seeds per condition
+5. Measure: steps to 99% test accuracy, total forgetting events
+
+**Experiment 2: Duplication Effects**
+1. Create datasets with controlled duplication: {1x, 2x, 4x, 8x} of random 25% subset
+2. Train with fixed hyperparameters
+3. Track memorization speed (steps to 100% train acc) on duplicated vs unique examples
+4. Measure forgetting events on duplicated vs unique examples
+5. Compare generalization (test accuracy at fixed steps)
+
+**Experiment 3: Forgetting Interventions**
+1. Compare: baseline, dropout (0.1, 0.3), Gaussian noise injection, periodic weight reset
+2. Fixed training budget (same total steps)
+3. Measure test accuracy curves and data efficiency
+
+### Baselines
+- Standard training with AdamW, no regularization beyond default
+- Standard weight decay (0.01) as baseline forgetting mechanism
+
+### Evaluation Metrics
+- **Steps to grokking**: First step where test acc &gt; 99%
+- **Forgetting events**: Per-example count of correct→incorrect transitions
+- **Data efficiency**: Test accuracy as function of training steps
+- **Memorization speed**: Steps to 100% train accuracy
+- **Generalization gap**: Train acc - test acc over training
+
+### Statistical Analysis Plan
+- 3 seeds per condition, report mean ± std
+- Wilcoxon rank-sum test for comparing conditions (non-parametric, small N)
+- Spearman correlation between forgetting events and generalization
+- Effect size: Cohen&#39;s d where appropriate
+
+## Expected Outcomes
+- H1: Weight decay 0.01-0.1 should show fastest grokking; 0 (no forgetting) should be slowest
+- H2: Duplicated examples should have fewer forgetting events and removing them shouldn&#39;t hurt test accuracy
+- H3: Moderate forgetting interventions should improve data efficiency; too much should hurt
+
+## Timeline
+- Planning: 20 min ✓
+- Implementation: 60 min
+- Experiments: 60 min
+- Analysis: 30 min
+- Documentation: 20 min
+
+## Potential Challenges
+- Grokking can be sensitive to hyperparameters — mitigate with grid search
+- Per-example forgetting tracking adds memory overhead — use efficient implementation
+- Some interventions may prevent convergence — monitor and adjust
+
+## Success Criteria
+- Clear evidence that forgetting pressure affects grokking speed
+- Quantitative relationship between forgetting events and generalization
+- At least one forgetting intervention that improves data efficiency
+
+
+════════════════════════════════════════════════════════════════════════════════
+                          LITERATURE REVIEW
+════════════════════════════════════════════════════════════════════════════════
+
+# Literature Review: LLMs Won&#39;t Learn Properly Until They Forget Better
+
+## Research Area Overview
+
+This review examines the intersection of memorization, forgetting, and generalization in large language models (LLMs). The hypothesis under investigation is that rapid memorization limits LLM generalization, making them less data-efficient compared to humans. We survey work on: (1) how and why LLMs memorize training data, (2) the role of forgetting in learning, (3) data efficiency and deduplication, and (4) the memorization-to-generalization transition.
+
+---
+
+## Key Papers
+
+### 1. Toneva et al. (2019) — &#34;An Empirical Study of Example Forgetting during Deep Neural Network Learning&#34; (ICLR 2019)
+- **arXiv:** 1812.05159
+- **Key Contribution:** Introduces the concept of &#34;forgetting events&#34; — transitions from correct to incorrect classification during training. Shows that examples vary dramatically in how often they are forgotten, from &#34;unforgettable&#34; (learned once, never forgotten) to highly forgettable.
+- **Methodology:** Track per-example classification accuracy at every SGD step. A forgetting event occurs when acc_i^t &gt; acc_i^{t+1}. Count forgetting events per example across training.
+- **Datasets:** CIFAR-10, CIFAR-100, permuted MNIST
+- **Key Findings:**
+  - ~30% of CIFAR-10 examples are unforgettable (learned once and never forgotten)
+  - Forgetting events are highly consistent across runs with different random seeds (Spearman ρ ≈ 0.9)
+  - Removing unforgettable examples (keeping only the &#34;hard&#34; forgettable ones) still allows near-full test accuracy, enabling up to 30% dataset compression
+  - Noisy/mislabeled examples have the highest forgetting counts
+  - Forgetting events correlate with classification margin (ρ = -0.74)
+- **Relevance:** Directly supports the hypothesis — examples learned too quickly (unforgettable) contribute less to generalization. The &#34;hard&#34; examples that are repeatedly forgotten and relearned are the ones that shape the decision boundary.
+- **Code:** Not released with paper, but methodology is simple to reproduce
+
+### 2. Feldman &amp; Zhang (2020) — &#34;Does Learning Require Memorization? A Short Tale about a Long Tail&#34; (STOC 2020 / arXiv 2008.03703)
+- **Key Contribution:** Provides theoretical and empirical evidence that memorization is *necessary* for good generalization on long-tailed data distributions.
+- **Methodology:** Influence estimation via leave-one-out retraining (~300K model trainings on CIFAR-100, Imagenet). Measures &#34;memorization&#34; as the influence of individual examples.
+- **Key Findings:**
+  - Long-tailed data distributions require memorizing rare subpopulations
+  - ~5% of training examples are &#34;high-memorization&#34; — accuracy on these drops by ≥40% when removed
+  - Models memorize both useful rare examples AND useless outliers because they&#39;re statistically indistinguishable
+  - Large generalization gaps are the *price* of achieving near-optimal accuracy on long-tailed data
+- **Relevance:** Challenges the simplistic view that memorization = bad. Suggests the problem isn&#39;t memorization per se, but *undiscriminating* memorization — LLMs memorize too quickly without distinguishing useful rare examples from noise.
+- **Datasets:** CIFAR-100, ImageNet (with extensive leave-one-out analysis)
+
+### 3. Carlini et al. (2023) — &#34;Quantifying Memorization Across Neural Language Models&#34; (ICLR 2023)
+- **arXiv:** 2202.07646
+- **Key Contribution:** Three log-linear relationships governing memorization in LMs: memorization grows with (1) model capacity, (2) data duplication, (3) context length.
+- **Key Findings:**
+  - Memorization is more prevalent than previously believed
+  - Larger models memorize more of their training data
+  - Duplicated examples are memorized superlinearly more
+  - Will likely worsen as models scale, without active mitigations
+- **Relevance:** Quantifies the memorization problem at scale — larger LLMs memorize faster and more, supporting the hypothesis that rapid memorization limits data efficiency.
+
+### 4. Zhang et al. (2023) — &#34;Counterfactual Memorization in Neural Language Models&#34; (ICLR 2024)
+- **arXiv:** 2112.12938
+- **Key Contribution:** Introduces *counterfactual memorization* — measuring memorization by comparing a model trained with vs. without a specific example, accounting for the fact that some sequences are inherently predictable.
+- **Key Findings:**
+  - Distinguishes &#34;extractable memorization&#34; (can regenerate verbatim) from &#34;counterfactual memorization&#34; (model behavior changes due to a specific example)
+  - Many sequences that appear memorized are actually just predictable from other data
+  - True memorization is concentrated in specific, often duplicated or distinctive examples
+- **Relevance:** Refines our understanding of what &#34;memorization&#34; means — critical for designing experiments that test whether forgetting improves learning.
+
+### 5. Yu (2025) — &#34;Memorization-Compression Cycles Improve Generalization&#34; (NeurIPS 2025 Workshop)
+- **arXiv:** 2505.08727
+- **Key Contribution:** Shows that during LLM pretraining, models naturally oscillate between &#34;memorization&#34; phases (expanding representations) and &#34;compression&#34; phases (contracting representations). Amplifying compression phases improves generalization.
+- **Methodology:** Tracks cosine similarity between cross-entropy gradients and Matrix-Based Entropy (MBE) gradients during training. Positive = memorization phase, negative = compression phase.
+- **Key Findings:**
+  - Generalization bound: Error ≤ Empirical Error + O(log(N) * 2^(αH(R_l)) / √N)
+  - Two levers: more data (N) OR lower representation entropy H(R_l)
+  - Adding explicit compression loss (MBE minimization) improves generalization significantly
+  - On FineWeb training: +1.8% improvement on MMLU, +2.2% on HellaSwag
+  - Most of the gain comes from compression, not just more training
+- **Relevance:** **Directly supports the hypothesis.** Shows that LLMs that &#34;forget&#34; (compress) better do learn better. The memorization-compression cycle is essentially a formalization of &#34;forgetting to learn.&#34;
+- **Datasets:** FineWeb (0.73B tokens), evaluated on MMLU, HellaSwag, ARC
+
+### 6. Li, Fan &amp; Zhou (2025) — &#34;Grokking in LLM Pretraining? Monitor Memorization-to-Generalization&#34;
+- **arXiv:** 2506.21551
+- **Key Contribution:** Demonstrates that grokking (delayed generalization long after memorization) occurs in practical LLM pretraining, not just toy settings. Proposes monitoring via MoE routing pathways.
+- **Methodology:** Uses OLMoE-1B-7B (MoE) model with 154 checkpoints. Tracks per-sample memorization (loss &lt; ε and stable) and generalization (via LoRA instruction tuning + benchmark evaluation).
+- **Key Findings:**
+  - Clear temporal gap between memorization and generalization onset
+  - Routing pathway entropy correlates with the memorization-to-generalization transition
+  - Memorized samples that later generalize develop more diverse routing pathways
+  - This provides a test-free way to monitor when a model shifts from memorizing to generalizing
+- **Relevance:** Shows that the memorize-then-generalize transition is a real phenomenon in LLMs, and that models need time (and implicit &#34;forgetting&#34; of surface patterns) to transition from memorization to true generalization.
+
+### 7. Wang et al. (2025) — &#34;Breaking Memorization Barriers in LLM Code Fine-Tuning via Information Bottleneck&#34;
+- **arXiv:** 2510.16022
+- **Key Contribution:** Identifies the &#34;memorization barrier&#34; — LLMs pre-memorize fine-tuning data during pretraining, preventing effective learning during fine-tuning. Proposes Information Bottleneck (IB) based approach to break through it.
+- **Methodology:** Uses Min-K% Prob to measure memorization. Applies IB principle: minimize I(X;Z) while maximizing I(Z;Y) — compress input representation while preserving task-relevant signal.
+- **Key Findings:**
+  - Base models already heavily memorize downstream code datasets
+  - This prior memorization creates bad local optima that SFT cannot escape
+  - IB-based fine-tuning (ForgetFilter) forces model to &#34;forget&#34; memorized patterns and learn generalizable features
+  - Significant improvements on Pass@1 and strict multi-sample metrics
+- **Relevance:** **Directly supports the hypothesis.** Demonstrates that forcing models to forget (via information bottleneck) improves generalization in code tasks.
+
+### 8. Lee et al. (2021) — &#34;Deduplicating Training Data Makes Language Models Better&#34; (ACL 2022)
+- **arXiv:** 2107.06499  | **Citations:** 804
+- **Key Contribution:** Shows massive duplication in standard datasets. Deduplication reduces memorized output by 10x and improves training efficiency.
+- **Key Findings:**
+  - Over 1% of unprompted LM output is verbatim from training data
+  - C4 contains a single 61-word sentence repeated &gt;60,000 times
+  - Deduplication: models need fewer steps for same/better accuracy
+  - Train-test overlap affects &gt;4% of validation sets
+- **Code:** https://github.com/google-research/deduplicate-text-datasets
+- **Relevance:** Reducing redundancy (a form of preventing over-memorization) directly improves both efficiency and quality.
+
+### 9. Abbas et al. (2023) — &#34;SemDeDup: Data-efficient Learning at Web-scale through Semantic Deduplication&#34; (ICLR 2024)
+- **arXiv:** 2303.09540 | **Citations:** 258
+- **Key Contribution:** Goes beyond exact deduplication to remove *semantic* duplicates using pre-trained embeddings. Can remove 50% of data with minimal performance loss.
+- **Key Findings:**
+  - Removing semantic duplicates preserves in-distribution performance
+  - Performance *increases* out of distribution — less memorization → better generalization
+  - Effectively halves training time
+- **Relevance:** Stronger evidence that redundant memorization hurts. When similar examples are consolidated, models learn more efficiently.
+
+### 10. Muennighoff et al. (2023) — &#34;Scaling Data-Constrained Language Models&#34;
+- **arXiv:** 2305.16264 | **Citations:** Large-scale (400 training runs)
+- **Key Contribution:** Scaling laws for data-constrained regimes. Up to 4 epochs of repetition ≈ unique data; beyond that, returns diminish to zero.
+- **Key Findings:**
+  - Training with up to 4 epochs yields negligible loss difference vs unique data
+  - At 40+ epochs, additional compute provides zero benefit
+  - Code/multilingual data augmentation helps mitigate data scarcity
+  - Proposes scaling law accounting for diminishing returns of repeated tokens
+- **Code:** https://github.com/huggingface/datablations
+- **Relevance:** Quantifies when repeated exposure (memorization) stops helping — directly informs the &#34;learning more from less&#34; aspect of the hypothesis.
+
+### 11. Tirumala et al. (2023) — &#34;D4: Improving LLM Pretraining via Document De-Duplication and Diversification&#34;
+- **arXiv:** 2308.12284
+- **Key Findings:** Smart data selection via embeddings provides 20% efficiency gains and up to 2% downstream accuracy improvement. Intelligent repetition outperforms random data while random repetition is worse than baseline.
+- **Relevance:** Data diversity (the opposite of redundant memorization) consistently helps.
+
+### 12. Wang et al. (2024) — &#34;Generalization v.s. Memorization: Tracing Language Models&#39; Capabilities Back to Pretraining Data&#34; (ICLR 2025)
+- **arXiv:** 2407.14985
+- **Key Contribution:** Uses &#34;distributional memorization&#34; to measure correlation between LLM outputs and pretraining data frequency via task-gram language models.
+- **Key Findings:**
+  - TriviaQA: strongest memorization effect
+  - Math/reasoning tasks: greater generalization, producing more novel outputs
+  - Memorization plays larger role in simpler, knowledge-intensive tasks
+  - Generalization is key for harder, reasoning-based tasks
+- **Relevance:** Not all tasks are equal — memorization is more/less harmful depending on task type.
+
+### 13. Power et al. (2022) — &#34;Grokking: Generalization Beyond Overfitting on Small Algorithmic Datasets&#34; (ICLR 2022)
+- **arXiv:** 2201.02177
+- **Key Contribution:** Discovery of &#34;grokking&#34; — models achieve perfect training accuracy (memorization) long before test accuracy improves (generalization). With continued training, generalization eventually emerges.
+- **Key Findings:**
+  - On modular arithmetic tasks, models memorize quickly but generalize only after much more training
+  - Weight decay is critical — it forces a form of &#34;forgetting&#34; that enables generalization
+  - The memorize-then-generalize pattern suggests these are distinct learning phases
+- **Relevance:** **Foundational for the hypothesis.** Grokking is the clearest example of &#34;learning requires forgetting&#34; — the model must move beyond memorized solutions to find generalizable ones.
+
+### 14. Zheng et al. (2025) — &#34;Spurious Forgetting in Continual Learning of Language Models&#34; (ICLR 2025)
+- **arXiv:** 2501.13453
+- **Key Contribution:** Distinguishes &#34;spurious forgetting&#34; (loss of task alignment, not knowledge) from true catastrophic forgetting in continual learning.
+- **Key Findings:**
+  - Performance drops during continual learning often reflect alignment disruption, not knowledge loss
+  - Freezing bottom layers substantially improves continual learning
+  - Knowledge is retained even when performance drops
+- **Relevance:** Important nuance — not all &#34;forgetting&#34; is equal. The type of forgetting matters for whether it helps or hurts learning.
+
+---
+
+## Common Methodologies
+
+1. **Memorization measurement:** Min-K% Prob (Shi et al.), membership inference attacks, counterfactual memorization, distributional memorization
+2. **Forgetting measurement:** Per-example forgetting event counting (Toneva), influence estimation (Feldman), routing pathway analysis (Li et al.)
+3. **Deduplication:** Exact (MinHash), near-duplicate (suffix arrays), semantic (SemDeDup via embeddings)
+4. **Information-theoretic approaches:** Information Bottleneck, Matrix-Based Entropy, representation compression
+5. **Scaling analysis:** Chinchilla-style scaling laws extended to data-constrained regimes
+
+## Standard Baselines
+
+- **Pythia model suite** (70M–12B): Standard for studying learning dynamics, has 154 checkpoints per model
+- **GPT-2/GPT-Neo:** Commonly used for memorization extraction studies
+- **Standard SFT vs. SFT + regularization:** For fine-tuning memorization studies
+- **Random replay vs. smart replay:** For continual learning baselines
+
+## Evaluation Metrics
+
+- **Memorization rate:** Fraction of training data extractable/memorized
+- **Forgetting events:** Count of correct→incorrect transitions during training
+- **Min-K% Prob score:** Average log-likelihood of least-likely K% tokens
+- **Generalization gap:** Train accuracy - test accuracy
+- **Data efficiency:** Performance per token/FLOP
+
+## Datasets in the Literature
+
+| Dataset | Used For | Papers |
+|---------|----------|--------|
+| The Pile (+ deduped) | LLM pretraining, memorization | Carlini, Pythia, many |
+| C4 | LM pretraining, dedup studies | Lee, SemDeDup, D4 |
+| CIFAR-10/100 | Forgetting event tracking | Toneva, Feldman |
+| WikiMIA | Memorization detection benchmark | Shi et al. |
+| GSM8K/GSM1K | Math reasoning memorization | Wang et al. |
+| TriviaQA | Knowledge memorization | Wang et al. |
+| Modular arithmetic | Grokking experiments | Power et al. |
+| FineWeb | Compression cycle training | Yu |
+
+## Gaps and Opportunities
+
+1. **No unified framework** connecting forgetting events, grokking, compression cycles, and data deduplication — these are studied separately but likely manifestations of the same underlying phenomenon
+2. **Limited work on *controlled* forgetting** — most work observes forgetting or prevents it; few papers explore *inducing* beneficial forgetting during training
+3. **Scale gap:** Forgetting events studied at CIFAR scale; memorization studied at LLM scale; no work connecting the two
+4. **No comparison to human learning:** The hypothesis claims LLMs are less data-efficient than humans *because* of memorization patterns, but no empirical comparison exists
+5. **Missing: forgetting-aware curriculum learning** — scheduling training to exploit the memorize-compress cycle
+
+---
+
+## Recommendations for Our Experiment
+
+### Recommended Datasets
+1. **Modular arithmetic** (synthetic) — for grokking/forgetting dynamics in controlled setting
+2. **Pythia checkpoints + The Pile** — for studying memorization dynamics across training
+3. **WikiMIA** — for measuring memorization at specific training stages
+4. **GSM8K** — for testing memorization vs generalization on reasoning tasks
+5. **C4 (subset)** — for deduplication experiments if compute allows
+
+### Recommended Baselines
+1. Standard training (no forgetting intervention)
+2. Weight decay as implicit forgetting mechanism
+3. SemDeDup / exact dedup as data-side forgetting
+4. Information Bottleneck regularization (ForgetFilter from Wang et al.)
+
+### Recommended Metrics
+1. Forgetting events per example (Toneva-style)
+2. Min-K% Prob for memorization detection
+3. Test accuracy / loss for generalization
+4. Data efficiency: performance-per-token curves
+5. Representation entropy (MBE) for compression
+
+### Methodological Considerations
+- Use Pythia for reproducibility (all checkpoints available)
+- Control for data ordering (Pythia trained on same data in same order)
+- Track both per-example and aggregate metrics
+- Compare forgetting patterns between deduplicated and non-deduplicated training
+- Consider MoE routing analysis for mechanistic insights (if using MoE models)
+
+
+════════════════════════════════════════════════════════════════════════════════
+                          PAPER REQUIREMENTS
+════════════════════════════════════════════════════════════════════════════════
+
+Generate a complete academic paper with the following structure:
+
+1. TITLE
+   - Clear, specific, informative
+   - Should convey main finding or contribution
+
+2. AUTHOR
+   - Use this exact author line in the \author{} block: Ari Holtzman and NeuriCo
+
+3. ABSTRACT (150-250 words)
+   - Problem statement
+   - Approach
+   - Key results
+   - Significance
+
+4. INTRODUCTION
+   - Research problem and motivation
+   - Gap in existing work
+   - Our contribution (be specific)
+   - Paper organization
+
+5. RELATED WORK
+   - Organized by theme/approach
+   - Position our work relative to prior work
+   - Cite papers from literature review
+
+6. METHODOLOGY
+   - Clear description of approach
+   - Experimental setup
+   - Datasets used
+   - Evaluation metrics
+   - Baselines
+
+7. RESULTS
+   - Present results with tables and figures
+   - Statistical analysis
+   - Comparison to baselines
+   - Ablation studies (if applicable)
+
+8. DISCUSSION
+   - Interpretation of results
+   - Limitations
+   - Broader implications
+
+9. CONCLUSION
+   - Summary of contributions
+   - Key findings
+   - Future work
+
+10. REFERENCES
+   - BibTeX format
+   - All cited papers
+
+════════════════════════════════════════════════════════════════════════════════
+                          OUTPUT FORMAT
+════════════════════════════════════════════════════════════════════════════════
+
+Create a MODULAR LaTeX project with the following directory structure:
+
+paper_draft/
+├── main.tex              # Main file that imports all sections
+├── references.bib        # BibTeX references
+├── sections/
+│   ├── abstract.tex      # Abstract content
+│   ├── introduction.tex  # Introduction section
+│   ├── related_work.tex  # Related work section
+│   ├── methodology.tex   # Methodology section
+│   ├── results.tex       # Results section
+│   ├── discussion.tex    # Discussion section
+│   └── conclusion.tex    # Conclusion section
+├── figures/              # Directory for any generated figures
+├── tables/               # Directory for complex standalone tables
+└── appendix/             # Directory for appendix sections (if needed)
+
+INSTRUCTIONS:
+1. First, create the directory structure above (mkdir -p paper_draft/sections paper_draft/figures paper_draft/tables paper_draft/appendix)
+2. Write main.tex using the EXACT preamble for NEURIPS:
+
+   \documentclass{article}
+   \usepackage[final]{neurips_2025}  % NEURIPS style (neurips_2025.sty is in paper_draft/)
+   \usepackage[hidelinks]{hyperref}  % REQUIRED: clickable links
+   \usepackage{booktabs}  % REQUIRED: professional tables
+   \usepackage{graphicx}
+   \usepackage{amsmath,amssymb}
+
+   % Import command files
+   \input{commands/math}
+   \input{commands/general}
+   \input{commands/macros}
+
+   % Use this bibliography style:
+   \bibliographystyle{plainnat}
+
+   \author{Ari Holtzman and NeuriCo}
+
+   - Use \input{sections/...} to include each section
+   - Use \bibliography{references} for references
+3. Write each section file with COMPLETE content (no placeholders)
+4. Each section file should include its \section{} command
+5. Write references.bib with all citations in BibTeX format
+6. After writing all files, compile the paper:
+   cd paper_draft && pdflatex -interaction=nonstopmode main.tex && bibtex main && pdflatex -interaction=nonstopmode main.tex && pdflatex -interaction=nonstopmode main.tex
+
+This modular structure allows humans to easily:
+- Edit individual sections without navigating a large file
+- Track changes per section
+- Reuse sections across different paper versions
+
+════════════════════════════════════════════════════════════════════════════════
+                          QUALITY REQUIREMENTS
+════════════════════════════════════════════════════════════════════════════════
+
+- Academic tone throughout
+- All claims must be supported by data from the experiment report
+- Proper citations using \cite{} commands
+- Clear figures and tables with proper captions
+- NO placeholder text - every section must have real content
+- The paper MUST compile without errors
+- If compilation fails, debug and fix the LaTeX errors
+
+════════════════════════════════════════════════════════════════════════════════
+                          LAB WRITING STYLE
+════════════════════════════════════════════════════════════════════════════════
+
+Follow these lab-specific conventions to match our paper style:
+
+1. LANGUAGE STYLE:
+   - Use active voice: "We propose", "We examine", "We focus on"
+   - Be direct and confident: "Our main question is...", "We hypothesize that..."
+   - State things clearly and simply - prefer plain language over jargon
+   - Use bold questions as paragraph organizers: {\bf what is X?}
+   - Include specific quantitative claims: "8.97% over baseline"
+   - Avoid fancy wording: "utilize" → "use", "facilitate" → "help"
+
+2. INTRODUCTION STRUCTURE:
+   - Engaging hook (get to the point quickly)
+   - Problem importance
+   - Gap identification
+   - Your approach with method figure reference
+   - Quantitative preview of results
+   - Contribution bullets (3-4 items, action verbs)
+
+3. CONTRIBUTION LISTS:
+   \begin{itemize}[leftmargin=*,itemsep=0pt,topsep=0pt]
+       \item We propose...
+       \item We conduct...
+       \item We complement...
+   \end{itemize}
+
+4. MODULAR COMMANDS STRUCTURE:
+   Command templates are pre-copied to paper_draft/commands/:
+   - math.tex: Math notation macros
+   - general.tex: Formatting macros
+   - macros.tex: Project-specific term definitions (customize this for your paper)
+
+   In main.tex, include:
+   \input{commands/math}
+   \input{commands/general}
+   \input{commands/macros}
+
+5. REFERENCE CONVENTIONS:
+   Use reference macros from math.tex:
+   - \figref{fig:name} for "figure 1" (lowercase, in-sentence)
+   - \Figref{fig:name} for "Figure 1" (capitalized, start of sentence)
+   - \secref{sec:name} for "section 2"
+
+6. TEXT FORMATTING:
+   - Use \para{Header text} for bold paragraph headers
+   - Define method/dataset names with \textsc and \xspace:
+     \newcommand{\methodname}{\textsc{MethodName}\xspace}
+
+7. TABLE FORMATTING:
+   - Use booktabs package (no vertical lines)
+   - Use \resizebox{\textwidth}{!}{...} for wide tables
+   - Use @{} to remove padding at table edges
+   - Use \cmidrule(lr){x-y} for sub-headers
+   - Use \textsc{} for dataset/method names in headers
+   - Bold best results with {\bf ...}
+
+8. FIGURE FORMATTING:
+   - Use 0.32\textwidth for 3-column subfigures
+   - Use 0.95\linewidth for full-width figures
+   - Use \input{figures/legend} for shared legends
+   - Write self-contained captions explaining key observations
+
+9. RESULTS PRESENTATION:
+   - Define \increase and \decrease for colored arrows (green up, red down)
+   - Bold best results in tables
+   - Report confidence intervals when available
+
+10. ALGORITHM STYLING:
+    - Use algpseudocode with [noend]
+    - Use \triangleright for comments
+
+11. HYPERLINKS (REQUIRED):
+    - Always use \usepackage[hidelinks]{hyperref} or with colored links
+    - All citations, section refs, figure refs, table refs must be clickable
+    - This is essential for reader navigation
+
+════════════════════════════════════════════════════════════════════════════════
+                          WORKFLOW: REVIEW AND REFLECT
+════════════════════════════════════════════════════════════════════════════════
+
+Before calling finish, you MUST complete these review steps:
+
+1. REVIEW RESOURCES (at the start):
+   - Read .claude/skills/paper-writer/SKILL.md for detailed guidance
+   - Study templates/paper_writing/lab_style_guide.md for style conventions
+   - Browse paper_examples/ for formatting and language patterns
+
+2. SELF-REFLECTION (before finishing):
+   After writing all sections, review your work against these criteria:
+
+   LANGUAGE CHECK:
+   - [ ] Is the writing clear and jargon-free?
+   - [ ] Are claims specific with quantitative support?
+   - [ ] Is active voice used throughout?
+
+   FORMATTING CHECK:
+   - [ ] Does main.tex include \input{commands/math}, \input{commands/general}, \input{commands/macros}?
+   - [ ] Is hyperref package included for clickable references?
+   - [ ] Do tables use booktabs (no vertical lines)?
+   - [ ] Are best results bolded in tables?
+   - [ ] Are figures/tables properly captioned?
+
+   STRUCTURE CHECK:
+   - [ ] Does introduction follow: hook → importance → gap → approach → preview → contributions?
+   - [ ] Are contribution bullets specific with action verbs?
+   - [ ] Does the paper compile without errors?
+
+3. FIX ISSUES:
+   - Address any issues found in the self-reflection
+   - Re-compile and verify the PDF looks correct
+
+Only after completing this review should you consider the paper finished.

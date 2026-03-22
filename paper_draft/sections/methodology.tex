@@ -1,0 +1,61 @@
+\section{Methodology}
+\label{sec:method}
+
+We conduct three experiments testing different facets of the hypothesis that rapid memorization limits generalization. All experiments use modular arithmetic as a controlled testbed where memorization and generalization are cleanly separable.
+
+\subsection{Task and Dataset}
+\label{sec:task}
+
+We use modular addition (mod 97): given operands $a, b \in \{0, \ldots, 96\}$, the model predicts $(a + b) \bmod 97$. The full dataset contains $97 \times 97 = 9{,}409$ pairs, split 50/50 into training (4,704 examples) and test (4,705 examples) sets. This follows the standard grokking setup of \citet{power2022grokking}.
+
+{\bf Why modular arithmetic?} This setting provides (1)~perfect control over data distribution with no confounds, (2)~a known generalizable solution (modular arithmetic), (3)~a clean separation between memorization (lookup table) and generalization (learned modular structure), and (4)~fast iteration (minutes per run).
+
+\para{Tokenization.} Inputs are sequences of four tokens: $[a, \text{op}, b, \text{eq}]$, where integers 0--96 serve as operand tokens, 97 encodes the operator, and 98 encodes the equals sign. The model predicts a single integer in $\{0, \ldots, 96\}$ from the last position.
+
+\subsection{Model Architecture}
+
+We use a 1-layer transformer~\cite{vaswani2017attention} with embedding dimension $d_{\text{model}} = 128$, 4 attention heads, and feed-forward dimension $d_{\text{ff}} = 512$. The model uses learnable token embeddings ($p + 2 = 99$ tokens) and learnable positional embeddings (5 positions). A linear head on the last position produces logits over 97 output classes.
+
+\subsection{Training Configuration}
+
+All models are trained with \adamw~\cite{loshchilov2019decoupled} at learning rate $10^{-3}$ and batch size 512. We evaluate every 50 steps and define \emph{grokking} as the first step where test accuracy reaches 99\%. Training continues for 3,000 steps after grokking to observe post-grokking dynamics. Each condition is run with 3 random seeds (42, 123, 456).
+
+\subsection{Forgetting Events}
+\label{sec:forgetting_events}
+
+Following \citet{toneva2019empirical}, we define a \emph{forgetting event} for example $i$ as a transition from correct to incorrect classification between consecutive evaluations: example $i$ is correctly classified at step $t$ but incorrectly classified at step $t + \Delta$. We track the total number of forgetting events per example across training. An example is \emph{unforgettable} if it is learned at some point and never subsequently forgotten.
+
+\subsection{Experiment 1: Forgetting Pressure}
+\label{sec:exp1}
+
+We train identical models with weight decay $\lambda \in \{0, 0.001, 0.01, 0.1, 1.0\}$, measuring:
+\begin{itemize}[leftmargin=*,itemsep=0pt,topsep=0pt]
+    \item Steps to grokking (first step with test accuracy $\geq 99\%$)
+    \item Per-example forgetting events
+    \item Fraction of unforgettable examples
+\end{itemize}
+Weight decay acts as forgetting pressure: it penalizes large weights, pushing the model away from the memorized solution (which requires large, example-specific weights) toward the generalizable solution (which uses smaller, structured weights).
+
+\subsection{Experiment 2: Duplication Effects}
+\label{sec:exp2}
+
+We test whether redundant examples are ``factored out'' too quickly by creating datasets with controlled duplication. We randomly select 25\% of training examples and duplicate them $k$ times, for $k \in \{1, 2, 4, 8\}$. All models use weight decay $\lambda = 1.0$. We track grokking speed and compare forgetting events between duplicated and non-duplicated examples.
+
+\subsection{Experiment 3: Forgetting Interventions}
+\label{sec:exp3}
+
+We compare seven forgetting mechanisms to identify the optimal forgetting regime:
+\begin{enumerate}[leftmargin=*,itemsep=0pt,topsep=0pt]
+    \item \textbf{Baseline}: Weight decay $\lambda = 1.0$, no additional intervention
+    \item \textbf{Dropout 0.1}: Standard dropout~\cite{srivastava2014dropout} at rate 0.1
+    \item \textbf{Dropout 0.3}: Standard dropout at rate 0.3
+    \item \textbf{Noise (small)}: Gaussian noise injection ($\sigma = 0.01$) to weights
+    \item \textbf{Noise (large)}: Gaussian noise injection ($\sigma = 0.1$) to weights
+    \item \textbf{Reset (gentle)}: Periodic partial reset of a small fraction of weights
+    \item \textbf{Reset (aggressive)}: Periodic reset of a larger fraction of weights
+\end{enumerate}
+All interventions use weight decay $\lambda = 1.0$ as the base configuration. We measure grokking rate (fraction of seeds that grok), average grokking step, and data efficiency (area under the test accuracy curve, normalized to $[0, 1]$).
+
+\subsection{Statistical Analysis}
+
+We report mean $\pm$ standard deviation across 3 seeds per condition. We use Spearman rank correlation to assess the monotonic relationship between weight decay and grokking speed. We compute Cohen's $d$ for pairwise comparisons between conditions to quantify effect sizes.

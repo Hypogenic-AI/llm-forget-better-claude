@@ -1,0 +1,27 @@
+{
+  "success": true,
+  "stages": {
+    "resource_finder": {
+      "success": true,
+      "completion_marker": "/workspaces/llm-forget-better-claude/.resource_finder_complete",
+      "outputs": {
+        "literature_review": "/workspaces/llm-forget-better-claude/literature_review.md",
+        "resources_catalog": "/workspaces/llm-forget-better-claude/resources.md",
+        "papers_dir": "/workspaces/llm-forget-better-claude/papers",
+        "datasets_dir": "/workspaces/llm-forget-better-claude/datasets",
+        "code_dir": "/workspaces/llm-forget-better-claude/code"
+      },
+      "log_file": "/workspaces/llm-forget-better-claude/logs/resource_finder_claude.log",
+      "transcript_file": "/workspaces/llm-forget-better-claude/logs/resource_finder_claude_transcript.jsonl",
+      "elapsed_time": 2145.6837866306305
+    },
+    "experiment_runner": {
+      "success": true,
+      "return_code": 0,
+      "elapsed_time": 2366.0492503643036,
+      "log_file": "/workspaces/llm-forget-better-claude/logs/execution_claude.log",
+      "transcript_file": "/workspaces/llm-forget-better-claude/logs/execution_claude_transcript.jsonl"
+    }
+  },
+  "work_dir": "/workspaces/llm-forget-better-claude"
+}

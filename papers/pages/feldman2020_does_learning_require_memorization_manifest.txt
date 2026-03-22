@@ -1,0 +1,11 @@
+PDF: /workspaces/llm-forget-better-claude/papers/feldman2020_does_learning_require_memorization.pdf
+Total pages: 18
+Pages per chunk: 3
+
+Chunks:
+  feldman2020_does_learning_require_memorization_chunk_001.pdf: pages 1-3
+  feldman2020_does_learning_require_memorization_chunk_002.pdf: pages 4-6
+  feldman2020_does_learning_require_memorization_chunk_003.pdf: pages 7-9
+  feldman2020_does_learning_require_memorization_chunk_004.pdf: pages 10-12
+  feldman2020_does_learning_require_memorization_chunk_005.pdf: pages 13-15
+  feldman2020_does_learning_require_memorization_chunk_006.pdf: pages 16-18

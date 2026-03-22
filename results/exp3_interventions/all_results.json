@@ -1,0 +1,247 @@
+{
+  "baseline": [
+    {
+      "intervention": "baseline",
+      "seed": 42,
+      "grokked": true,
+      "grok_step": 600,
+      "total_steps": 3610,
+      "elapsed_seconds": 19.704834699630737,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.89753483377502
+    },
+    {
+      "intervention": "baseline",
+      "seed": 123,
+      "grokked": true,
+      "grok_step": 550,
+      "total_steps": 3560,
+      "elapsed_seconds": 21.93636441230774,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.8683194149957022
+    },
+    {
+      "intervention": "baseline",
+      "seed": 456,
+      "grokked": true,
+      "grok_step": 600,
+      "total_steps": 3610,
+      "elapsed_seconds": 22.135116577148438,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.8783823007776757
+    }
+  ],
+  "dropout_0.1": [
+    {
+      "intervention": "dropout_0.1",
+      "seed": 42,
+      "grokked": true,
+      "grok_step": 950,
+      "total_steps": 3960,
+      "elapsed_seconds": 25.001103401184082,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.8124185900979239
+    },
+    {
+      "intervention": "dropout_0.1",
+      "seed": 123,
+      "grokked": true,
+      "grok_step": 700,
+      "total_steps": 3710,
+      "elapsed_seconds": 24.507492542266846,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.8505233417445321
+    },
+    {
+      "intervention": "dropout_0.1",
+      "seed": 456,
+      "grokked": true,
+      "grok_step": 750,
+      "total_steps": 3760,
+      "elapsed_seconds": 25.429229736328125,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.8580075788124452
+    }
+  ],
+  "dropout_0.3": [
+    {
+      "intervention": "dropout_0.3",
+      "seed": 42,
+      "grokked": true,
+      "grok_step": 9200,
+      "total_steps": 12210,
+      "elapsed_seconds": 80.8915159702301,
+      "best_test_acc": 0.9995748996734619,
+      "final_test_acc": 0.9991497993469238,
+      "data_efficiency_auc": 0.484039382600844
+    },
+    {
+      "intervention": "dropout_0.3",
+      "seed": 123,
+      "grokked": true,
+      "grok_step": 3350,
+      "total_steps": 6360,
+      "elapsed_seconds": 42.003010272979736,
+      "best_test_acc": 1.0,
+      "final_test_acc": 0.999787449836731,
+      "data_efficiency_auc": 0.7821635035007992
+    },
+    {
+      "intervention": "dropout_0.3",
+      "seed": 456,
+      "grokked": true,
+      "grok_step": 9750,
+      "total_steps": 12760,
+      "elapsed_seconds": 84.76601266860962,
+      "best_test_acc": 1.0,
+      "final_test_acc": 0.9985122084617615,
+      "data_efficiency_auc": 0.5260829786700952
+    }
+  ],
+  "noise_small": [
+    {
+      "intervention": "noise_small",
+      "seed": 42,
+      "grokked": true,
+      "grok_step": 550,
+      "total_steps": 3560,
+      "elapsed_seconds": 16.865484952926636,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.8864308403522175
+    },
+    {
+      "intervention": "noise_small",
+      "seed": 123,
+      "grokked": true,
+      "grok_step": 650,
+      "total_steps": 3660,
+      "elapsed_seconds": 20.70979952812195,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.8763903504730277
+    },
+    {
+      "intervention": "noise_small",
+      "seed": 456,
+      "grokked": true,
+      "grok_step": 550,
+      "total_steps": 3560,
+      "elapsed_seconds": 19.30195713043213,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.8709184656050638
+    }
+  ],
+  "noise_large": [
+    {
+      "intervention": "noise_large",
+      "seed": 42,
+      "grokked": true,
+      "grok_step": 550,
+      "total_steps": 3560,
+      "elapsed_seconds": 20.46871304512024,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.7207560249321562
+    },
+    {
+      "intervention": "noise_large",
+      "seed": 123,
+      "grokked": true,
+      "grok_step": 550,
+      "total_steps": 3560,
+      "elapsed_seconds": 22.343902349472046,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.6920540391953961
+    },
+    {
+      "intervention": "noise_large",
+      "seed": 456,
+      "grokked": true,
+      "grok_step": 650,
+      "total_steps": 3660,
+      "elapsed_seconds": 21.17950201034546,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.6878173264691819
+    }
+  ],
+  "reset_gentle": [
+    {
+      "intervention": "reset_gentle",
+      "seed": 42,
+      "grokked": true,
+      "grok_step": 550,
+      "total_steps": 3560,
+      "elapsed_seconds": 22.1787588596344,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.8431546942996128
+    },
+    {
+      "intervention": "reset_gentle",
+      "seed": 123,
+      "grokked": true,
+      "grok_step": 550,
+      "total_steps": 3560,
+      "elapsed_seconds": 22.492912530899048,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.8628480316412086
+    },
+    {
+      "intervention": "reset_gentle",
+      "seed": 456,
+      "grokked": true,
+      "grok_step": 550,
+      "total_steps": 3560,
+      "elapsed_seconds": 22.211424827575684,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.8458600245715518
+    }
+  ],
+  "reset_aggressive": [
+    {
+      "intervention": "reset_aggressive",
+      "seed": 42,
+      "grokked": true,
+      "grok_step": 600,
+      "total_steps": 3610,
+      "elapsed_seconds": 22.60621428489685,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.804271748473107
+    },
+    {
+      "intervention": "reset_aggressive",
+      "seed": 123,
+      "grokked": true,
+      "grok_step": 550,
+      "total_steps": 3560,
+      "elapsed_seconds": 21.684452772140503,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.791641109849817
+    },
+    {
+      "intervention": "reset_aggressive",
+      "seed": 456,
+      "grokked": true,
+      "grok_step": 550,
+      "total_steps": 3560,
+      "elapsed_seconds": 17.20787000656128,
+      "best_test_acc": 1.0,
+      "final_test_acc": 1.0,
+      "data_efficiency_auc": 0.7670836483826861
+    }
+  ]
+}

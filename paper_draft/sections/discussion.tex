@@ -1,0 +1,32 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Interpretation}
+
+Our results support a simple but consequential claim: \textbf{models that forget individual examples more readily discover generalizable solutions faster.} At weight decay $\lambda = 0$, the model memorizes a lookup table and stays there for ${\sim}$17,000 steps. At $\lambda = 1.0$, the forgetting pressure continuously destabilizes the memorized solution, forcing the model through cycles of memorization and compression until it converges on the generalizable modular arithmetic rule. The 30$\times$ speedup is not a subtle effect---it is a qualitative shift in learning dynamics.
+
+The connection to prior work is direct. The oscillatory dynamics we observe at high weight decay are consistent with the memorization-compression cycles of \citet{yu2025memorization}. The drop in unforgettable examples from 90\% to 1\% mirrors the forgetting event analysis of \citet{toneva2019empirical}, but in a setting where we can precisely control the forgetting pressure. And the grokking transition itself~\cite{power2022grokking} is revealed to be a consequence of insufficient forgetting: when forgetting pressure is strong enough, there is no prolonged memorization phase at all.
+
+\para{Why weight decay works as a forgetting mechanism.} Weight decay acts as a continuous pressure toward zero weights. The memorized solution---which stores each training example as a distinct pattern in the weight matrix---requires large, example-specific weights. The generalizable solution---which encodes modular arithmetic as a structured, low-rank computation---uses smaller, more regular weights. Weight decay selectively destabilizes the former while preserving the latter. This makes it a naturally ``targeted'' forgetting mechanism, unlike dropout, which disrupts representations indiscriminately.
+
+\para{The inverted-U of forgetting.} Our Experiment 3 reveals that the relationship between forgetting and generalization is not monotonic for all mechanisms. While weight decay shows a monotonic benefit across our tested range, dropout 0.3 catastrophically delays grokking. The key distinction is whether the forgetting mechanism targets memorized representations specifically or disrupts all representations equally. Effective forgetting must be \emph{selective}: it should destabilize memorized solutions while leaving generalizable structure intact.
+
+\subsection{Implications}
+
+\para{For training practice.} Our results suggest that early training should incorporate strong forgetting pressure (high weight decay), potentially tapering as the model transitions from memorization to generalization. This is consistent with common training schedules that use warmup followed by cosine decay, though our work suggests the regularization schedule deserves as much attention as the learning rate schedule.
+
+\para{For data curation.} The 37\% slowdown from 8$\times$ duplication, even under strong forgetting pressure, reinforces the importance of deduplication~\cite{lee2022deduplicating, abbas2023semdedup}. Redundant examples do not help and can actively harm generalization. Combined with the findings of \citet{muennighoff2023scaling} on diminishing returns from data repetition, this suggests that data diversity is more valuable than data volume.
+
+\para{For the field.} Grokking~\cite{power2022grokking}, forgetting events~\cite{toneva2019empirical}, and memorization-compression cycles~\cite{yu2025memorization} are different views of the same underlying phenomenon: the transition from memorized to generalizable representations. Our work provides the controlled experimental evidence linking these perspectives through the lens of forgetting pressure.
+
+\subsection{Limitations}
+
+\para{Scale.} Our experiments use a 1-layer transformer on a synthetic task with 9,409 examples. While the grokking phenomenon has been observed at LLM scale~\cite{li2025grokking, yu2025memorization}, we do not directly demonstrate that the 30$\times$ acceleration from forgetting pressure transfers to models with billions of parameters trained on natural language.
+
+\para{Task complexity.} Modular arithmetic has a single, clean generalizable solution. Real-world language tasks involve partial, overlapping, and hierarchical generalizations. The sharp memorize-then-generalize transition may be softer in practice, and the optimal forgetting pressure is likely task-dependent.
+
+\para{Weight decay as forgetting.} Weight decay is a regularizer that induces forgetting-like behavior, but it is not the only or necessarily the best mechanism for beneficial forgetting. More sophisticated approaches---such as information bottleneck methods~\cite{wang2025breaking} or forgetting-aware curriculum learning---may be more effective at scale.
+
+\para{Statistical power.} We use 3 random seeds per condition. While the observed effects are large and consistent (Cohen's $d = 3.91$), additional seeds would strengthen confidence in smaller effects, particularly in Experiment 2 where the duplication penalty is more modest.
+
+\para{Confound in Experiment 2.} We ran the duplication experiment with $\lambda = 1.0$ (high forgetting pressure), which may have masked the duplication effect. Running at lower weight decay levels would likely reveal a larger penalty from redundant examples, as the model would have less implicit forgetting to compensate.

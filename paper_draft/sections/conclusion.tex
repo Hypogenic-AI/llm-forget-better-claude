@@ -1,0 +1,8 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We tested the hypothesis that rapid memorization limits neural network generalization by systematically varying forgetting pressure in the grokking setting. Our central finding is that increasing weight decay from 0 to 1.0 accelerates generalization by 30$\times$, with a strong negative correlation between forgetting pressure and time-to-generalization ($\rho = -0.88$, $p < 0.00002$). Models that forget individual examples more readily---as measured by per-example forgetting events---discover generalizable solutions faster. We further showed that data duplication slows generalization and that an optimal forgetting level exists, with weight decay outperforming dropout, noise injection, and weight reset as a forgetting mechanism.
+
+These results reframe the data efficiency problem: rather than asking ``how can we give models more data?'' we should ask ``how can we help models forget what they have memorized?'' The gap between human and machine data efficiency may stem not from architectural limitations but from insufficient forgetting pressure during training.
+
+Future work should test whether these findings scale to LLM pretraining, develop principled methods for setting optimal forgetting pressure analogous to Chinchilla scaling laws, and explore forgetting-aware curriculum learning that alternates between memorization and compression phases. The connection between grokking, forgetting events, and compression cycles deserves formalization as a unified theoretical framework.

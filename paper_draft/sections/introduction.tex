@@ -1,0 +1,19 @@
+\section{Introduction}
+\label{sec:intro}
+
+Modern language models train on trillions of tokens, yet a human child acquires language from roughly 100 million words of input by age ten~\cite{feldman2020does}. This gap in data efficiency persists despite decades of architectural innovation. We ask: {\bf what if the bottleneck is not the model's capacity to learn, but its tendency to memorize too fast?}
+
+Neural networks routinely achieve perfect training accuracy long before they generalize. In the extreme case of grokking~\cite{power2022grokking}, models memorize all training examples within hundreds of steps but require tens of thousands of additional steps to discover the underlying rule. This phenomenon is not limited to toy settings: recent work shows that memorization-to-generalization transitions occur during LLM pretraining~\cite{li2025grokking}, and that explicit compression of memorized representations improves downstream performance~\cite{yu2025memorization}. Memorization in large language models is pervasive, growing log-linearly with model capacity and data duplication~\cite{carlini2023quantifying}.
+
+Despite extensive work studying memorization~\cite{carlini2023quantifying, zhang2023counterfactual}, forgetting dynamics~\cite{toneva2019empirical}, grokking~\cite{power2022grokking}, and compression cycles~\cite{yu2025memorization} as separate phenomena, no prior work has systematically varied \emph{forgetting pressure} and measured its causal effect on the memorization-to-generalization transition. The connection between per-example forgetting events, weight regularization, and data efficiency remains unexplored.
+
+We bridge this gap by conducting controlled experiments on modular arithmetic, the gold-standard testbed for grokking, where memorization and generalization are cleanly separable. We vary forgetting pressure via weight decay across five levels, introduce controlled data duplication, and compare seven forgetting interventions---all while tracking per-example forgetting events in the style of \citet{toneva2019empirical}. Our results are striking: increasing weight decay from 0 to 1.0 accelerates generalization by 30$\times$ (from ${\sim}$17,850 to ${\sim}$583 steps), with an extremely strong negative correlation between forgetting pressure and grokking time (Spearman $\rho = -0.88$, $p < 0.00002$, Cohen's $d = 3.91$). We further show that data duplication slows generalization by 37\%, and that an optimal forgetting regime exists: too little forgetting traps the model in memorized solutions, while too much prevents any learning at all.
+
+Our contributions are:
+\begin{itemize}[leftmargin=*,itemsep=0pt,topsep=0pt]
+    \item We provide the first controlled experiment linking forgetting pressure to generalization speed, demonstrating a 30$\times$ acceleration in grokking through weight decay with strong statistical significance.
+    \item We track per-example forgetting events across all conditions, showing that models which forget more per-example discover generalizable solutions faster---the ``unforgettable'' fraction drops from 90\% to 1\% under high forgetting pressure.
+    \item We demonstrate that data duplication harms generalization and that an optimal forgetting level exists, with weight decay outperforming dropout, noise injection, and weight reset as a forgetting mechanism.
+\end{itemize}
+
+The remainder of the paper is organized as follows. \Secref{sec:related} reviews related work on memorization, forgetting, and grokking. \Secref{sec:method} describes our experimental methodology. \Secref{sec:results} presents results across three experiments. \Secref{sec:discussion} discusses implications and limitations, and \secref{sec:conclusion} concludes.

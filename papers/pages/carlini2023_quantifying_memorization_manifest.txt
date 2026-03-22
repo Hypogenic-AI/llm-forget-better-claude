@@ -1,0 +1,12 @@
+PDF: /workspaces/llm-forget-better-claude/papers/carlini2023_quantifying_memorization.pdf
+Total pages: 19
+Pages per chunk: 3
+
+Chunks:
+  carlini2023_quantifying_memorization_chunk_001.pdf: pages 1-3
+  carlini2023_quantifying_memorization_chunk_002.pdf: pages 4-6
+  carlini2023_quantifying_memorization_chunk_003.pdf: pages 7-9
+  carlini2023_quantifying_memorization_chunk_004.pdf: pages 10-12
+  carlini2023_quantifying_memorization_chunk_005.pdf: pages 13-15
+  carlini2023_quantifying_memorization_chunk_006.pdf: pages 16-18
+  carlini2023_quantifying_memorization_chunk_007.pdf: page 19
